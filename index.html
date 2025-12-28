@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="Fish It Companion - RNG Calculator & Stats Tracker">
+    <title>🎣 Fish It Companion</title>
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Fish It">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Activation Screen */
+        .activation-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .activation-screen.hidden {
+            display: none;
+        }
+
+        .app-logo {
+            font-size: 64px;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .app-title {
+            font-size: 32px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .app-subtitle {
+            color: #94a3b8;
+            margin-bottom: 40px;
+            font-size: 16px;
+        }
+
+        .activation-card {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            display: block;
+            color: #cbd5e1;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 15px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px solid #334155;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .btn-discord {
+            background: #5865f2;
+            color: white;
+        }
+
+        .info-box {
+            background: rgba(251, 191, 36, 0.1);
+            border-left: 4px solid #fbbf24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .info-title {
+            color: #fbbf24;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .info-text {
+            color: #cbd5e1;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        /* Main App Screen */
+        .main-screen {
+            display: none;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .main-screen.active {
+            display: flex;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+
+        .admin-badge {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #78350f;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(251, 191, 36, 0.3);
+        }
+
+        /* Status Bar */
+        .status-bar {
+            background: rgba(30, 41, 59, 0.6);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .status-time {
+            color: #cbd5e1;
+        }
+
+        .logout-btn {
+            color: #ef4444;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:active {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        /* Navigation */
+        .navigation {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(30, 41, 59, 0.8);
+            padding: 10px;
+            border-top: 1px solid rgba(59, 130, 246, 0.1);
+            position: sticky;
+            bottom: 0;
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+            max-width: 100px;
+        }
+
+        .nav-item.active {
+            background: rgba(59, 130, 246, 0.2);
+        }
+
+        .nav-icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+
+        .nav-label {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+
+        .nav-item.active .nav-label {
+            color: #3b82f6;
+            font-weight: 600;
+        }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            padding-bottom: 80px;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .screen-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #3b82f6;
+            margin-bottom: 12px;
+        }
+
+        .card-text {
+            color: #cbd5e1;
+            font-size: 14px;
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+
+        .card-subtext {
+            color: #94a3b8;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid rgba(59, 130, 246, 0.3);
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 25px;
+            border-radius: 12px;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            transition: transform 0.3s;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast-success {
+            border-color: rgba(34, 197, 94, 0.5);
+        }
+
+        .toast-error {
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+
+        /* Responsive */
+        @media (max-width: 380px) {
+            .activation-card {
+                padding: 20px;
+            }
+            
+            .app-title {
+                font-size: 28px;
+            }
+            
+            .nav-label {
+                font-size: 10px;
+            }
+        }
+
+        /* Install Prompt */
+        .install-prompt {
+            display: none;
+            position: fixed;
+            bottom: 80px;
+            left: 20px;
+            right: 20px;
+            background: rgba(59, 130, 246, 0.95);
+            padding: 15px;
+            border-radius: 12px;
+            z-index: 1000;
+            animation: slideUp 0.3s;
+        }
+
+        .install-prompt.show {
+            display: block;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .install-prompt-text {
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .install-prompt-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .install-prompt-buttons button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- Activation Screen -->
+    <div class="activation-screen" id="activationScreen">
+        <div class="app-logo">🎣</div>
+        <h1 class="app-title">Fish It Companion</h1>
+        <p class="app-subtitle">Activate your key to continue</p>
+
+        <div class="activation-card">
+            <div class="input-group">
+                <label class="input-label">Enter Key:</label>
+                <input 
+                    type="text" 
+                    id="keyInput" 
+                    class="input-field" 
+                    placeholder="RullXFlyy or FISHIT-XXXX-XXXX"
+                    autocomplete="off"
+                    autocapitalize="characters"
+                >
+            </div>
+
+            <button class="btn btn-primary" onclick="activateKey()">
+                🔓 Activate Key
+            </button>
+
+            <button class="btn btn-discord" onclick="openDiscord()">
+                💬 Get Key from Discord
+            </button>
+
+            <div class="info-box">
+                <div class="info-title">ℹ️ Key Information:</div>
+                <div class="info-text">
+                    • Admin Key: Valid for 1 year<br>
+                    • User Keys: Valid for 24 hours<br>
+                    • Contact admin for keys
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App Screen -->
+    <div class="main-screen" id="mainScreen">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-title">🎣 Fish It Companion</div>
+            <div class="admin-badge" id="adminBadge" style="display: none;">
+                👑 ADMIN
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-time" id="statusTime">⏰ Loading...</div>
+            <div class="logout-btn" onclick="logout()">Logout</div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="content">
+            <!-- Home Screen -->
+            <div class="screen active" id="homeScreen">
+                <h2 class="screen-title">🏠 Welcome!</h2>
+                
+                <div class="card">
+                    <div class="card-title">🎯 Quick Stats</div>
+                    <div class="card-text">• Total Casts: 0</div>
+                    <div class="card-text">• SECRET Fish: 0</div>
+                    <div class="card-text">• Current Luck: +0%</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">🔥 Features</div>
+                    <div class="card-text">✅ RNG Calculator</div>
+                    <div class="card-text">✅ Stats Tracker</div>
+                    <div class="card-text">✅ Discord Integration</div>
+                    <div class="card-text">✅ Fish Encyclopedia</div>
+                </div>
+            </div>
+
+            <!-- RNG Screen -->
+            <div class="screen" id="rngScreen">
+                <h2 class="screen-title">🎲 RNG Calculator</h2>
+                <div class="card">
+                    <div class="card-title">Coming Soon...</div>
+                    <div class="card-text">Calculate your chances of catching SECRET fish!</div>
+                    <div class="card-subtext">• Select fish<br>• Input casts<br>• Add luck multiplier<br>• See results</div>
+                </div>
+            </div>
+
+            <!-- Stats Screen -->
+            <div class="screen" id="statsScreen">
+                <h2 class="screen-title">📊 Statistics</h2>
+                <div class="card">
+                    <div class="card-title">Coming Soon...</div>
+                    <div class="card-text">Track your fishing progress and achievements!</div>
+                    <div class="card-subtext">• Daily stats<br>• Fish caught<br>• Money earned<br>• Leaderboards</div>
+                </div>
+            </div>
+
+            <!-- Settings Screen -->
+            <div class="screen" id="settingsScreen">
+                <h2 class="screen-title">⚙️ Settings</h2>
+                <div class="card">
+                    <div class="card-title">App Info</div>
+                    <div class="card-text">Version: 1.0.0</div>
+                    <div class="card-text">Created by: RullXFlyy</div>
+                    <div class="card-text">License: Free - Not For Sale</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Key Status</div>
+                    <div class="card-text" id="keyStatus">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="navigation">
+            <div class="nav-item active" onclick="switchScreen('home')">
+                <div class="nav-icon">🏠</div>
+                <div class="nav-label">Home</div>
+            </div>
+            <div class="nav-item" onclick="switchScreen('rng')">
+                <div class="nav-icon">🎲</div>
+                <div class="nav-label">RNG</div>
+            </div>
+            <div class="nav-item" onclick="switchScreen('stats')">
+                <div class="nav-icon">📊</div>
+                <div class="nav-label">Stats</div>
+            </div>
+            <div class="nav-item" onclick="switchScreen('settings')">
+                <div class="nav-icon">⚙️</div>
+                <div class="nav-label">Settings</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Install Prompt -->
+    <div class="install-prompt" id="installPrompt">
+        <div class="install-prompt-text">
+            📱 Install app for better experience!
+        </div>
+        <div class="install-prompt-buttons">
+            <button onclick="installApp()" style="background: #22c55e; color: white;">Install</button>
+            <button onclick="dismissInstall()" style="background: #64748b; color: white;">Later</button>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            ADMIN_KEY: 'RullXFlyy',
+            ADMIN_DURATION: 365 * 24 * 60 * 60 * 1000, // 1 year
+            USER_DURATION: 24 * 60 * 60 * 1000, // 24 hours
+            WEBHOOK_URL: 'https://discord.com/api/webhooks/1454561358560362627/cAf9zb40USewve5cfYvlLztUtUpkQqGOi0sx42iBSY0jASSJhtjw7RQfGX4eurNIXHSQ'
+        };
+
+        let activationData = null;
+        let deferredPrompt = null;
+
+        // Initialize
+        window.addEventListener('load', () => {
+            checkActivation();
+            setupPWA();
+        });
+
+        // Check if already activated
+        function checkActivation() {
+            const savedKey = localStorage.getItem('fishit_key');
+            const expiryTime = localStorage.getItem('fishit_expiry');
+
+            if (savedKey && expiryTime) {
+                const now = Date.now();
+                const expiry = parseInt(expiryTime);
+
+                if (now < expiry) {
+                    const isAdmin = savedKey === CONFIG.ADMIN_KEY;
+                    activationData = {
+                        key: savedKey,
+                        isAdmin: isAdmin,
+                        expiryTime: expiry,
+                        remainingTime: expiry - now
+                    };
+                    showMainScreen();
+                    updateStatus();
+                } else {
+                    // Key expired
+                    localStorage.removeItem('fishit_key');
+                    localStorage.removeItem('fishit_expiry');
+                }
+            }
+        }
+
+        // Activate key
+        async function activateKey() {
+            const key = document.getElementById('keyInput').value.trim();
+
+            if (!key) {
+                showToast('Please enter a key!', 'error');
+                return;
+            }
+
+            const isAdminKey = key === CONFIG.ADMIN_KEY;
+
+            // Validate format
+            if (!isAdminKey && !key.match(/^FISHIT-\w{4}-\w{4}$/)) {
+                showToast('Invalid key format!', 'error');
+                return;
+            }
+
+            const duration = isAdminKey ? CONFIG.ADMIN_DURATION : CONFIG.USER_DURATION;
+            const expiryTime = Date.now() + duration;
+
+            // Save
+            localStorage.setItem('fishit_key', key);
+            localStorage.setItem('fishit_expiry', expiryTime.toString());
+
+            // Send to Discord
+            await sendToDiscord(key, isAdminKey, expiryTime);
+
+            // Update state
+            activationData = {
+                key: key,
+                isAdmin: isAdminKey,
+                expiryTime: expiryTime,
+                remainingTime: duration
+            };
+
+            showToast(
+                isAdminKey ? '🎉 Admin key activated! Valid for 1 year!' : '✅ Key activated! Valid for 24 hours!',
+                'success'
+            );
+
+            setTimeout(() => {
+                showMainScreen();
+                updateStatus();
+            }, 1500);
+        }
+
+        // Send to Discord
+        async function sendToDiscord(key, isAdmin, expiryTime) {
+            try {
+                const payload = {
+                    embeds: [{
+                        title: '🔑 Fish It Companion - Key Activated',
+                        description: isAdmin ? '👑 Admin Key Activated!' : '✅ User Key Activated',
+                        color: isAdmin ? 0xFFD700 : 0x00FF00,
+                        fields: [
+                            { name: '🔐 Key', value: `\`${key}\``, inline: true },
+                            { name: '👤 Type', value: isAdmin ? '**Admin (1 Year)**' : 'User (24 Hours)', inline: true },
+                            { name: '⏰ Expires', value: new Date(expiryTime).toLocaleString(), inline: false }
+                        ],
+                        timestamp: new Date().toISOString()
+                    }]
+                };
+
+                await fetch(CONFIG.WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } catch (error) {
+                console.warn('Failed to send webhook:', error);
+            }
+        }
+
+        // Show main screen
+        function showMainScreen() {
+            document.getElementById('activationScreen').classList.add('hidden');
+            document.getElementById('mainScreen').classList.add('active');
+            
+            if (activationData?.isAdmin) {
+                document.getElementById('adminBadge').style.display = 'block';
+            }
+        }
+
+        // Update status
+        function updateStatus() {
+            if (!activationData) return;
+
+            const updateTime = () => {
+                const now = Date.now();
+                const remaining = activationData.expiryTime - now;
+
+                if (remaining <= 0) {
+                    logout();
+                    return;
+                }
+
+                const days = Math.floor(remaining / (24 * 60 * 60 * 1000));
+                const hours = Math.floor((remaining % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+                const minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
+
+                let timeText = '';
+                if (days > 0) timeText = `${days}d ${hours}h remaining`;
+                else if (hours > 0) timeText = `${hours}h ${minutes}m remaining`;
+                else timeText = `${minutes}m remaining`;
+
+                document.getElementById('statusTime').textContent = `⏰ ${timeText}`;
+                
+                // Update settings
+                document.getElementById('keyStatus').innerHTML = `
+                    Key: <code>${activationData.key}</code><br>
+                    Type: ${activationData.isAdmin ? '👑 Admin' : '👤 User'}<br>
+                    Expires: ${new Date(activationData.expiryTime).toLocaleString()}
+                `;
+            };
+
+            updateTime();
+            setInterval(updateTime, 60000); // Update every minute
+        }
+
+        // Logout
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('fishit_key');
+                localStorage.removeItem('fishit_expiry');
+                location.reload();
+            }
+        }
+
+        // Switch screen
+        function switchScreen(screen) {
+            // Update screens
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screen + 'Screen').classList.add('active');
+
+            // Update navigation
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+        }
+
+        // Show toast
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Open Discord
+        function openDiscord() {
+            window.open('https://discord.gg/Y3QJ5WjEU', '_blank');
+        }
+
+        // PWA Setup
+        function setupPWA() {
+            // Check if already installed
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                return;
+            }
+
+            // Listen for install prompt
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                
+                // Show install prompt after 3 seconds
+                setTimeout(() => {
+                    document.getElementById('installPrompt').classList.add('show');
+                }, 3000);
+            });
+        }
+
+        // Install app
+        async function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+                document.getElementById('installPrompt').classList.remove('show');
+            }
+        }
+
+        // Dismiss install
+        function dismissInstall() {
+            document.getElementById('installPrompt').classList.remove('show');
+        }
+    </script>
+</body>
+  </html>
