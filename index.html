@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="Fish It Companion - RNG Calculator & Stats Tracker">
+    <title>🎣 Fish It Companion</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Fish It">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .activation-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .activation-screen.hidden { display: none; }
+
+        .app-logo {
+            font-size: 64px;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .app-title {
+            font-size: 32px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .app-subtitle {
+            color: #94a3b8;
+            margin-bottom: 40px;
+            font-size: 16px;
+        }
+
+        .activation-card {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .input-group { margin-bottom: 20px; }
+
+        .input-label {
+            display: block;
+            color: #cbd5e1;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 15px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px solid #334155;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-primary:active { transform: scale(0.98); }
+
+        .btn-discord {
+            background: #5865f2;
+            color: white;
+        }
+
+        .btn-small {
+            padding: 10px 16px;
+            font-size: 14px;
+            width: auto;
+            display: inline-block;
+        }
+
+        .btn-success {
+            background: #22c55e;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .info-box {
+            background: rgba(251, 191, 36, 0.1);
+            border-left: 4px solid #fbbf24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .info-title {
+            color: #fbbf24;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .info-text {
+            color: #cbd5e1;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .main-screen {
+            display: none;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .main-screen.active { display: flex; }
+
+        .header {
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+
+        .admin-badge {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #78350f;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-bar {
+            background: rgba(30, 41, 59, 0.6);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .status-time { color: #cbd5e1; }
+
+        .logout-btn {
+            color: #ef4444;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 6px;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(30, 41, 59, 0.8);
+            padding: 10px;
+            border-top: 1px solid rgba(59, 130, 246, 0.1);
+            position: sticky;
+            bottom: 0;
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+            max-width: 100px;
+        }
+
+        .nav-item.active {
+            background: rgba(59, 130, 246, 0.2);
+        }
+
+        .nav-icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+
+        .nav-label {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+
+        .nav-item.active .nav-label {
+            color: #3b82f6;
+            font-weight: 600;
+        }
+
+        .content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            padding-bottom: 80px;
+        }
+
+        .screen { display: none; }
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .screen-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #3b82f6;
+            margin-bottom: 12px;
+        }
+
+        .card-text {
+            color: #cbd5e1;
+            font-size: 14px;
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+
+        .card-subtext {
+            color: #94a3b8;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        .fish-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .fish-item {
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .fish-item.selected {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.2);
+        }
+
+        .fish-name {
+            font-weight: bold;
+            color: #fff;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .fish-odds {
+            color: #94a3b8;
+            font-size: 11px;
+            font-family: monospace;
+        }
+
+        .result-box {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
+            border: 2px solid rgba(34, 197, 94, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .result-big {
+            font-size: 32px;
+            font-weight: bold;
+            color: #22c55e;
+            margin-bottom: 10px;
+        }
+
+        .result-label {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .stat-value {
+            color: #fff;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 25px;
+            border-radius: 12px;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            transition: transform 0.3s;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px solid #334155;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .key-display {
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px solid #22c55e;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 18px;
+            color: #22c55e;
+            text-align: center;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        @media (max-width: 380px) {
+            .fish-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Activation Screen -->
+    <div class="activation-screen" id="activationScreen">
+        <div class="app-logo">🎣</div>
+        <h1 class="app-title">Fish It Companion</h1>
+        <p class="app-subtitle">Activate your key to continue</p>
+
+        <div class="activation-card">
+            <div class="input-group">
+                <label class="input-label">Enter Key:</label>
+                <input 
+                    type="text" 
+                    id="keyInput" 
+                    class="input-field" 
+                    placeholder="RullXFlyy or FISHIT-XXXX-XXXX"
+                >
+            </div>
+
+            <button class="btn btn-primary" onclick="activateKey()">
+                🔓 Activate Key
+            </button>
+
+            <button class="btn btn-discord" onclick="openDiscord()">
+                💬 Get Key from Discord
+            </button>
+
+            <div class="info-box">
+                <div class="info-title">ℹ️ Key Information:</div>
+                <div class="info-text">
+                    • Admin Key: Valid for 1 year<br>
+                    • User Keys: Valid for 24 hours<br>
+                    • Contact admin for keys
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App Screen -->
+    <div class="main-screen" id="mainScreen">
+        <div class="header">
+            <div class="header-title">🎣 Fish It Companion</div>
+            <div class="admin-badge" id="adminBadge" style="display: none;">👑 ADMIN</div>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-time" id="statusTime">⏰ Loading...</div>
+            <div class="logout-btn" onclick="logout()">Logout</div>
+        </div>
+
+        <div class="content">
+            <!-- Home Screen -->
+            <div class="screen active" id="homeScreen">
+                <h2 class="screen-title">🏠 Dashboard</h2>
+                
+                <div class="card">
+                    <div class="card-title">📊 Your Stats</div>
+                    <div class="stat-row">
+                        <span class="stat-label">Total Casts:</span>
+                        <span class="stat-value" id="totalCasts">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Fish Caught:</span>
+                        <span class="stat-value" id="fishCaught">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Money Earned:</span>
+                        <span class="stat-value" id="moneyEarned">$0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Hours Played:</span>
+                        <span class="stat-value" id="hoursPlayed">0h</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">🔥 Quick Actions</div>
+                    <button class="btn btn-primary" onclick="switchScreen('rng')">
+                        🎲 Open RNG Calculator
+                    </button>
+                    <button class="btn btn-success" onclick="switchScreen('stats')">
+                        📊 Track New Session
+                    </button>
+                </div>
+            </div>
+
+            <!-- RNG Calculator Screen -->
+            <div class="screen" id="rngScreen">
+                <h2 class="screen-title">🎲 RNG Calculator</h2>
+                
+                <div class="card">
+                    <div class="card-title">Select Fish:</div>
+                    <div class="fish-grid" id="fishGrid"></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Settings:</div>
+                    <div class="input-group">
+                        <label class="input-label">Number of Casts:</label>
+                        <input type="number" id="numCasts" class="input-field" value="10000" min="1">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Your Luck (%):</label>
+                        <input type="number" id="luckInput" class="input-field" value="1230" min="100">
+                        <div class="card-subtext">Example: 1230% = +1130% bonus luck</div>
+                    </div>
+                    <button class="btn btn-primary" onclick="calculateRNG()">Calculate</button>
+                </div>
+
+                <div id="rngResults"></div>
+            </div>
+
+            <!-- Stats Tracker Screen -->
+            <div class="screen" id="statsScreen">
+                <h2 class="screen-title">📊 Stats Tracker</h2>
+                
+                <div class="card">
+                    <div class="card-title">Add New Session:</div>
+                    <div class="input-group">
+                        <label class="input-label">Casts:</label>
+                        <input type="number" id="sessionCasts" class="input-field" placeholder="1000">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Fish Caught:</label>
+                        <input type="number" id="sessionFish" class="input-field" placeholder="50">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Money Earned:</label>
+                        <input type="number" id="sessionMoney" class="input-field" placeholder="5000">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Hours Played:</label>
+                        <input type="number" id="sessionHours" class="input-field" placeholder="2" step="0.1">
+                    </div>
+                    <button class="btn btn-success" onclick="saveSession()">💾 Save Session</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">📈 All Time Stats:</div>
+                    <div class="stat-row">
+                        <span class="stat-label">Total Casts:</span>
+                        <span class="stat-value" id="displayTotalCasts">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Total Fish:</span>
+                        <span class="stat-value" id="displayFishCaught">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Total Money:</span>
+                        <span class="stat-value" id="displayMoneyEarned">$0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Total Hours:</span>
+                        <span class="stat-value" id="displayHoursPlayed">0h</span>
+                    </div>
+                    <button class="btn btn-danger btn-small" onclick="resetStats()">🔄 Reset Stats</button>
+                </div>
+            </div>
+
+            <!-- Settings Screen -->
+            <div class="screen" id="settingsScreen">
+                <h2 class="screen-title">⚙️ Settings</h2>
+                
+                <div class="card" id="keyGenCard" style="display: none;">
+                    <div class="card-title">🔑 Admin: Key Generator</div>
+                    <button class="btn btn-primary" onclick="generateUserKey()">Generate New User Key</button>
+                    <div id="generatedKeyDisplay"></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">📱 App Info</div>
+                    <div class="stat-row">
+                        <span class="stat-label">Version:</span>
+                        <span class="stat-value">2.0.0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Created by:</span>
+                        <span class="stat-value">RullXFlyy</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">License:</span>
+                        <span class="stat-value">Free</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">🔐 Your Key Status</div>
+                    <div id="keyStatusDisplay"></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">💬 Support</div>
+                    <button class="btn btn-discord" onclick="openDiscord()">Join Discord Server</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="navigation">
+            <div class="nav-item active" onclick="switchScreen('home')">
+                <div class="nav-icon">🏠</div>
+                <div class="nav-label">Home</div>
+            </div>
+            <div class="nav-item" onclick="switchScreen('rng')">
+                <div class="nav-icon">🎲</div>
+                <div class="nav-label">RNG</div>
+            </div>
+            <div class="nav-item" onclick="switchScreen('stats')">
+                <div class="nav-icon">📊</div>
+                <div class="nav-label">Stats</div>
+            </div>
+            <div class="nav-item" onclick="switchScreen('settings')">
+                <div class="nav-icon">⚙️</div>
+                <div class="nav-label">Settings</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            ADMIN_KEY: 'RullXFlyy',
+            ADMIN_DURATION: 365 * 24 * 60 * 60 * 1000,
+            USER_DURATION: 24 * 60 * 60 * 1000,
+            WEBHOOK_URL: 'https://discord.com/api/webhooks/1454561358560362627/cAf9zb40USewve5cfYvlLztUtUpkQqGOi0sx42iBSY0jASSJhtjw7RQfGX4eurNIXHSQ'
+        };
+
+        const FISH_DATA = [
+            { name: "El Shark Gran Maja 🦈", odds: 4000000, location: "Ocean" },
+            { name: "Worm Fish 🪱", odds: 3000000, location: "Ocean" },
+            { name: "Lochness Monster 🦕", odds: 3000000, location: "Lost Isle" },
+            { name: "Monster Shark 🦈", odds: 2500000, location: "Coral Reefs" },
+            { name: "Orca 🐋", odds: 1500000, location: "Fisherman Island" },
+            { name: "Crystal Crab 🦀", odds: 750000, location: "Fisherman Island" },
+            { name: "Ghost Shark 👻", odds: 500000, location: "Ocean" },
+            { name: "Blob Shark 🫧", odds: 250000, location: "Ocean" },
+            { name: "Eerie Shark 😱", odds: 250000, location: "Coral Reefs" }
+        ];
+
+        let activationData = null;
+        let selectedFish = FISH_DATA[0];
+
+        window.addEventListener('load', () => {
+            checkActivation();
+            loadStats();
+            renderFishGrid();
+        });
+
+        function checkActivation() {
+            const savedKey = localStorage.getItem('fishit_key');
+            const expiryTime = localStorage.getItem('fishit_expiry');
+
+            if (savedKey && expiryTime) {
+                const now = Date.now();
+                const expiry = parseInt(expiryTime);
+
+                if (now < expiry) {
+                    const isAdmin = savedKey === CONFIG.ADMIN_KEY;
+                    activationData = {
+                        key: savedKey,
+                        isAdmin: isAdmin,
+                        expiryTime: expiry,
+                        remainingTime: expiry - now
+                    };
+                    showMainScreen();
+                    updateStatus();
+                } else {
+                    localStorage.removeItem('fishit_key');
+                    localStorage.removeItem('fishit_expiry');
+                }
+            }
+        }
+
+        async function activateKey() {
+            const key = document.getElementById('keyInput').value.trim();
+            if (!key) {
+                showToast('Please enter a key!', 'error');
+                return;
+            }
+
+            const isAdminKey = key === CONFIG.ADMIN_KEY;
+            if (!isAdminKey && !key.match(/^FISHIT-\w{4}-\w{4}$/)) {
+                showToast('Invalid key format!', 'error');
+                return;
+            }
+
+            const duration = isAdminKey ? CONFIG.ADMIN_DURATION : CONFIG.USER_DURATION;
+            const expiryTime = Date.now() + duration;
+
+            localStorage.setItem('fishit_key', key);
+            localStorage.setItem('fishit_expiry', expiryTime.toString());
+
+            await sendToDiscord(key, isAdminKey, expiryTime);
+
+            activationData = {
+                key: key,
+                isAdmin: isAdminKey,
+                expiryTime: expiryTime,
+                remainingTime: duration
+            };
+
+            showToast(isAdminKey ? '🎉 Admin key activated!' : '✅ Key activated!', 'success');
+
+            setTimeout(() => {
+                showMainScreen();
+                updateStatus();
+            }, 1500);
+        }
+
+        async function sendToDiscord(key, isAdmin, expiryTime) {
+            try {
+                const payload = {
+                    embeds: [{
+                        title: '🔑 Fish It Companion - Key Activated',
+                        description: isAdmin ? '👑 Admin Key!' : '✅ User Key',
+                        color: isAdmin ? 0xFFD700 : 0x00FF00,
+                        fields: [
+                            { name: '🔐 Key', value: `\`${key}\``, inline: true },
+                            { name: '👤 Type', value: isAdmin ? '**Admin (1 Year)**' : 'User (24h)', inline: true },
+                            { name: '⏰ Expires', value: new Date(expiryTime).toLocaleString(), inline: false }
+                        ],
+                        timestamp: new Date().toISOString()
+                    }]
+                };
+                await fetch(CONFIG.WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } catch (e) {}
+        }
+
+        function showMainScreen() {
+            document.getElementById('activationScreen').classList.add('hidden');
+            document.getElementById('mainScreen').classList.add('active');
+            
+            if (activationData?.isAdmin) {
+                document.getElementById('adminBadge').style.display = 'block';
+                document.getElementById('keyGenCard').style.display = 'block';
+            }
+        }
+
+        function updateStatus() {
+            if (!activationData) return;
+
+            const update = () => {
+                const now = Date.now();
+                const remaining = activationData.expiryTime - now;
+
+                if (remaining <= 0) {
+                    logout();
+                    return;
+                }
+
+                const days = Math.floor(remaining / (24 * 60 * 60 * 1000));
+                const hours = Math.floor((remaining % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+                const minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
+
+                let timeText = days > 0 ? `${days}d ${hours}h` : hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+                document.getElementById('statusTime').textContent = `⏰ ${timeText} remaining`;
+                
+                document.getElementById('keyStatusDisplay').innerHTML = `
+                    <div class="stat-row"><span class="stat-label">Key:</span><span class="stat-value">${activationData.key}</span></div>
+                    <div class="stat-row"><span class="stat-label">Type:</span><span class="stat-value">${activationData.isAdmin ? '👑 Admin' : '👤 User'}</span></div>
+                    <div class="stat-row"><span class="stat-label">Expires:</span><span class="stat-value">${new Date(activationData.expiryTime).toLocaleString()}</span></div>
+                `;
+            };
+
+            update();
+            setInterval(update, 60000);
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('fishit_key');
+                localStorage.removeItem('fishit_expiry');
+                location.reload();
+            }
+        }
+
+        function switchScreen(screen) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screen + 'Screen').classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function openDiscord() {
+            window.open('https://discord.gg/Y3QJ5WjEU', '_blank');
+        }
+
+        // RNG Calculator Functions
+        function renderFishGrid() {
+            const grid = document.getElementById('fishGrid');
+            grid.innerHTML = '';
+            FISH_DATA.forEach((fish, idx) => {
+                const item = document.createElement('div');
+                item.className = 'fish-item' + (idx === 0 ? ' selected' : '');
+                item.innerHTML = `
+                    <div class="fish-name">${fish.name}</div>
+                    <div class="fish-odds">1 in ${fish.odds.toLocaleString()}</div>
+                `;
+                item.onclick = () => selectFish(fish, item);
+                grid.appendChild(item);
+            });
+        }
+
+        function selectFish(fish, element) {
+            document.querySelectorAll('.fish-item').forEach(i => i.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedFish = fish;
+        }
+
+        function calculateRNG() {
+            const numCasts = parseInt(document.getElementById('numCasts').value);
+            const luck = parseInt(document.getElementById('luckInput').value) / 100;
+
+            if (!numCasts || numCasts < 1) {
+                showToast('Enter valid number of casts!', 'error');
+                return;
+            }
+
+            const adjustedOdds = selectedFish.odds / luck;
+            const dropRate = 1 / adjustedOdds;
+            const probAtLeastOne = (1 - Math.pow(1 - dropRate, numCasts)) * 100;
+            
+            const castsFor50 = Math.ceil(Math.log(0.5) / Math.log(1 - dropRate));
+            const castsFor90 = Math.ceil(Math.log(0.1) / Math.log(1 - dropRate));
+            const castsFor99 = Math.ceil(Math.log(0.01) / Math.log(1 - dropRate));
+
+            const resultsHTML = `
+                <div class="result-box">
+                    <div class="result-big">${probAtLeastOne.toFixed(4)}%</div>
+                    <div class="result-label">Chance to catch ${selectedFish.name}</div>
+                    <div class="result-label">in ${numCasts.toLocaleString()} casts with ${luck}x luck</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">📊 Casts Needed:</div>
+                    <div class="stat-row">
+                        <span class="stat-label">50% chance:</span>
+                        <span class="stat-value">${castsFor50.toLocaleString()} casts</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">90% chance:</span>
+                        <span class="stat-value">${castsFor90.toLocaleString()} casts</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">99% chance:</span>
+                        <span class="stat-value">${castsFor99.toLocaleString()} casts</span>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('rngResults').innerHTML = resultsHTML;
+            showToast('✅ Calculation complete!', 'success');
+        }
+
+        // Stats Tracker Functions
+        function loadStats() {
+            const stats = JSON.parse(localStorage.getItem('fishit_stats') || '{"casts":0,"fish":0,"money":0,"hours":0}');
+            updateStatsDisplay(stats);
+        }
+
+        function updateStatsDisplay(stats) {
+            document.getElementById('totalCasts').textContent = stats.casts.toLocaleString();
+            document.getElementById('fishCaught').textContent = stats.fish.toLocaleString();
+            document.getElementById('moneyEarned').textContent = ' + stats.money.toLocaleString();
+            document.getElementById('hoursPlayed').textContent = stats.hours.toFixed(1) + 'h';
+
+            document.getElementById('displayTotalCasts').textContent = stats.casts.toLocaleString();
+            document.getElementById('displayFishCaught').textContent = stats.fish.toLocaleString();
+            document.getElementById('displayMoneyEarned').textContent = ' + stats.money.toLocaleString();
+            document.getElementById('displayHoursPlayed').textContent = stats.hours.toFixed(1) + 'h';
+        }
+
+        function saveSession() {
+            const casts = parseInt(document.getElementById('sessionCasts').value) || 0;
+            const fish = parseInt(document.getElementById('sessionFish').value) || 0;
+            const money = parseInt(document.getElementById('sessionMoney').value) || 0;
+            const hours = parseFloat(document.getElementById('sessionHours').value) || 0;
+
+            if (casts === 0 && fish === 0 && money === 0 && hours === 0) {
+                showToast('Enter at least one value!', 'error');
+                return;
+            }
+
+            const stats = JSON.parse(localStorage.getItem('fishit_stats') || '{"casts":0,"fish":0,"money":0,"hours":0}');
+            stats.casts += casts;
+            stats.fish += fish;
+            stats.money += money;
+            stats.hours += hours;
+
+            localStorage.setItem('fishit_stats', JSON.stringify(stats));
+            updateStatsDisplay(stats);
+
+            document.getElementById('sessionCasts').value = '';
+            document.getElementById('sessionFish').value = '';
+            document.getElementById('sessionMoney').value = '';
+            document.getElementById('sessionHours').value = '';
+
+            showToast('✅ Session saved!', 'success');
+        }
+
+        function resetStats() {
+            if (confirm('Are you sure you want to reset all stats?')) {
+                localStorage.setItem('fishit_stats', '{"casts":0,"fish":0,"money":0,"hours":0}');
+                loadStats();
+                showToast('Stats reset!', 'success');
+            }
+        }
+
+        // Key Generator (Admin Only)
+        function generateUserKey() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let key = 'FISHIT-';
+            
+            for (let i = 0; i < 4; i++) {
+                key += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            key += '-';
+            for (let i = 0; i < 4; i++) {
+                key += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+
+            document.getElementById('generatedKeyDisplay').innerHTML = `
+                <div class="key-display" id="newKey">${key}</div>
+                <button class="btn btn-success" onclick="copyKey('${key}')">📋 Copy Key</button>
+            `;
+
+            showToast('Key generated!', 'success');
+        }
+
+        function copyKey(key) {
+            navigator.clipboard.writeText(key).then(() => {
+                showToast('Key copied to clipboard!', 'success');
+            });
+        }
+    </script>
+</body>
+</html>
